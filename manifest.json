@@ -1,0 +1,21 @@
+[
+  {
+    "category": "General",
+    "guid": "4e787d24-b22a-4fbb-8565-ad2c26e079b7",
+    "name": "Web Upload",
+    "description": "Adds an authenticated upload endpoint and dashboard page to upload files via the Jellyfin web UI.",
+    "owner": "JDKSyntaxError1",
+    "overview": "Upload files from the Jellyfin dashboard",
+    "versions": [
+      {
+        "checksum": "343e815316dfcd36693b8476d482fe7f",
+        "changelog": "Initial release.",
+        "targetAbi": "10.11.8.0",
+        "sourceUrl": "https://github.com/JDKSyntaxError1/jellyfin-webupload-plugin/releases/download/v0.1.0.0/WebUpload_0.1.0.0.zip",
+        "timestamp": "2026-05-14 00:00:00",
+        "version": "0.1.0.0"
+      }
+    ]
+  }
+]
+
