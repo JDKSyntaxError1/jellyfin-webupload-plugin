@@ -31,6 +31,54 @@ public sealed class WebUploadController : ControllerBase
     }
 
     /// <summary>
+    /// Simple landing page for quick manual verification that the plugin is loaded.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint is intentionally unauthenticated so it can be opened directly in a browser.
+    /// It does not expose any sensitive data.
+    /// </remarks>
+    [HttpGet]
+    [AllowAnonymous]
+    public ActionResult Index()
+    {
+        const string html = """
+            <!doctype html>
+            <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <title>Jellyfin Web Upload</title>
+              <style>
+                body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;line-height:1.4}
+                code{background:#f3f3f3;padding:2px 6px;border-radius:4px}
+              </style>
+            </head>
+            <body>
+              <h1>Web Upload plugin is installed</h1>
+              <p>This is a simple verification page served by the Jellyfin Web Upload plugin.</p>
+              <p>Use the Jellyfin dashboard to configure and upload files:</p>
+              <ul>
+                <li><code>Dashboard → Plugins → Web Upload</code></li>
+              </ul>
+              <p>Health check endpoint: <code>/WebUpload/Ping</code></p>
+            </body>
+            </html>
+            """;
+
+        return Content(html, "text/html");
+    }
+
+    /// <summary>
+    /// Lightweight health check endpoint.
+    /// </summary>
+    [HttpGet("Ping")]
+    [AllowAnonymous]
+    public ActionResult<WebUploadPingResult> Ping()
+    {
+        var enabled = !string.IsNullOrWhiteSpace(Plugin.Instance?.Configuration.UploadBasePath);
+        return Ok(new WebUploadPingResult(true, enabled));
+    }
+
+    /// <summary>
     /// Uploads a file to the configured upload directory.
     /// </summary>
     /// <param name="file">Multipart form file field named <c>file</c>.</param>

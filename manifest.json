@@ -8,6 +8,14 @@
     "overview": "Upload files from the Jellyfin dashboard",
     "versions": [
       {
+        "checksum": "a4224948f89a8e696d28d2ca85fb5535",
+        "changelog": "Add /WebUpload and /WebUpload/Ping endpoints for easy verification (fixes HTTP 405 confusion).",
+        "targetAbi": "10.11.8.0",
+        "sourceUrl": "https://github.com/JDKSyntaxError1/jellyfin-webupload-plugin/releases/download/v0.1.1.0/WebUpload_0.1.1.0.zip",
+        "timestamp": "2026-05-14 00:00:00",
+        "version": "0.1.1.0"
+      },
+      {
         "checksum": "343e815316dfcd36693b8476d482fe7f",
         "changelog": "Initial release.",
         "targetAbi": "10.11.8.0",
@@ -18,4 +26,3 @@
     ]
   }
 ]
-
