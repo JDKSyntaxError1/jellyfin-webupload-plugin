@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Web Upload</title>
+</head>
+<body>
+<div id="WebUploadConfigPage"
+     data-role="page"
+     class="page type-interior pluginConfigurationPage"
+     data-require="emby-input,emby-button,emby-checkbox">
+
+    <div data-role="content">
+        <div class="content-primary">
+
+            <h2>Web Upload</h2>
+
+            <div class="fieldDescription">
+                This plugin adds an authenticated endpoint that lets you upload files via the Jellyfin dashboard.
+                For safety, uploads are disabled until you set an upload base path.
+            </div>
+
+            <form id="WebUploadConfigForm">
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="UploadBasePath">Upload base path</label>
+                    <input id="UploadBasePath" name="UploadBasePath" type="text" is="emby-input" />
+                    <div class="fieldDescription">
+                        Absolute directory path on the Jellyfin server where uploads will be stored.
+                    </div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="AllowedExtensions">Allowed extensions</label>
+                    <input id="AllowedExtensions" name="AllowedExtensions" type="text" is="emby-input" />
+                    <div class="fieldDescription">
+                        Comma-separated list, e.g. .mp4,.mkv,.mp3
+                    </div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="MaxUploadSizeMiB">Max upload size (MiB)</label>
+                    <input id="MaxUploadSizeMiB" name="MaxUploadSizeMiB" type="number" min="1" is="emby-input" />
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="AllowOverwrite" name="AllowOverwrite" type="checkbox" is="emby-checkbox" />
+                        <span>Allow overwrite</span>
+                    </label>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </div>
+            </form>
+
+            <hr />
+
+            <h3>Upload a file</h3>
+            <div class="fieldDescription">
+                Uses the current authenticated Jellyfin session. If you get 401/403, re-login as an admin.
+            </div>
+
+            <form id="WebUploadForm">
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="RelativePath">Subfolder (optional)</label>
+                    <input id="RelativePath" name="RelativePath" type="text" is="emby-input" placeholder="e.g. Movies/New" />
+                </div>
+                <div class="inputContainer">
+                    <input id="UploadFile" name="UploadFile" type="file" />
+                </div>
+                <div>
+                    <button is="emby-button" type="submit" class="raised block emby-button">
+                        <span>Upload</span>
+                    </button>
+                </div>
+            </form>
+
+            <div id="WebUploadStatus" class="fieldDescription" style="margin-top: 1em;"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var WebUploadConfig = { pluginUniqueId: '4e787d24-b22a-4fbb-8565-ad2c26e079b7' };
+
+        function setStatus(text) {
+            document.querySelector('#WebUploadStatus').textContent = text || '';
+        }
+
+        document.querySelector('#WebUploadConfigPage').addEventListener('pageshow', function () {
+            Dashboard.showLoadingMsg();
+            ApiClient.getPluginConfiguration(WebUploadConfig.pluginUniqueId).then(function (config) {
+                document.querySelector('#UploadBasePath').value = config.UploadBasePath || '';
+                document.querySelector('#AllowedExtensions').value = config.AllowedExtensions || '';
+                document.querySelector('#MaxUploadSizeMiB').value = config.MaxUploadSizeMiB || 0;
+                document.querySelector('#AllowOverwrite').checked = !!config.AllowOverwrite;
+                Dashboard.hideLoadingMsg();
+            });
+        });
+
+        document.querySelector('#WebUploadConfigForm').addEventListener('submit', function (e) {
+            Dashboard.showLoadingMsg();
+            ApiClient.getPluginConfiguration(WebUploadConfig.pluginUniqueId).then(function (config) {
+                config.UploadBasePath = document.querySelector('#UploadBasePath').value || '';
+                config.AllowedExtensions = document.querySelector('#AllowedExtensions').value || '';
+                config.MaxUploadSizeMiB = parseInt(document.querySelector('#MaxUploadSizeMiB').value || '0', 10);
+                config.AllowOverwrite = document.querySelector('#AllowOverwrite').checked;
+
+                ApiClient.updatePluginConfiguration(WebUploadConfig.pluginUniqueId, config).then(function (result) {
+                    Dashboard.processPluginConfigurationUpdateResult(result);
+                });
+            });
+
+            e.preventDefault();
+            return false;
+        });
+
+        document.querySelector('#WebUploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var fileInput = document.querySelector('#UploadFile');
+            var file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                setStatus('Please select a file.');
+                return false;
+            }
+
+            setStatus('Uploading...');
+
+            var form = new FormData();
+            form.append('file', file, file.name);
+            form.append('relativePath', document.querySelector('#RelativePath').value || '');
+
+            // Reuse Jellyfin's authenticated ApiClient (adds auth headers automatically).
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('WebUpload/Upload'),
+                data: form,
+                processData: false,
+                contentType: false
+            }).then(function (res) {
+                setStatus(res && res.message ? res.message : 'Uploaded.');
+            }, function (err) {
+                var msg = (err && err.statusText) ? err.statusText : 'Upload failed.';
+                setStatus(msg);
+            });
+
+            return false;
+        });
+    </script>
+</div>
+</body>
+</html>
+
